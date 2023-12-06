@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class LoanConditionsFormView extends FormLayout {
-    private static final String FORM_LABEL = "Loan Calculator";
+    private static final String FORM_LABEL = "Conditions";
 
     private final BeanValidationBinder<RequestPayload> binder = new BeanValidationBinder<>(RequestPayload.class);
     private final InputTextFieldBuilder builder = InputTextFieldBuilder.getInstance();

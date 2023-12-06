@@ -2,13 +2,18 @@ package org.example.loancalculator.ui;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.Route;
+import org.example.loancalculator.entity.Client;
 import org.example.loancalculator.model.Payment;
 import org.example.loancalculator.model.RequestPayload;
+import org.example.loancalculator.repository.ClientRepository;
 import org.example.loancalculator.service.LoanCalculator;
+import org.example.loancalculator.ui.components.ClientForm;
 import org.example.loancalculator.ui.components.LoanConditionsFormView;
 import org.example.loancalculator.ui.components.common.NotificationStatus;
 
@@ -18,7 +23,7 @@ import java.util.Optional;
 @Route
 public class MainView extends VerticalLayout {
 
-    public MainView(LoanCalculator loanCalculator) {
+    public MainView(LoanCalculator loanCalculator, ClientRepository clientRepository) {
         LoanConditionsFormView form = new LoanConditionsFormView();
         Button button = new Button("Calculate");
         button.addClickListener(click -> {
@@ -31,6 +36,11 @@ public class MainView extends VerticalLayout {
                         NotificationVariant.LUMO_PRIMARY
                 );
                 RequestPayload payload = optionalRequestPayload.get();
+                // todo: save through the service, not direct repo call
+                clientRepository.save(
+                        new Client("test@example.com")
+                );
+
                 // todo: just accept the object RequestPayload in LoanCalculator::generatePaymentPlan
                 List<Payment> payments = loanCalculator.generatePaymentPlan(
                         payload.getLoanAmount(),
@@ -50,7 +60,9 @@ public class MainView extends VerticalLayout {
                 );
             }
         });
-        add(form, button);
+
+        ClientForm clientForm = new ClientForm();
+        add(new H2("Loan Calculator"), new HorizontalLayout(clientForm, form), button);
     }
 
     private Grid<Payment> initPaymentPlanGrid() {
