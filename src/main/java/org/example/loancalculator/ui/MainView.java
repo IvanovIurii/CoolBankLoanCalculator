@@ -4,16 +4,15 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.Route;
 import org.example.loancalculator.entity.Client;
 import org.example.loancalculator.model.Payment;
 import org.example.loancalculator.model.RequestPayload;
+import org.example.loancalculator.model.RequestPayloadWithClient;
 import org.example.loancalculator.repository.ClientRepository;
 import org.example.loancalculator.service.LoanCalculator;
-import org.example.loancalculator.ui.components.ClientForm;
 import org.example.loancalculator.ui.components.LoanConditionsFormView;
 import org.example.loancalculator.ui.components.common.NotificationStatus;
 
@@ -23,11 +22,13 @@ import java.util.Optional;
 @Route
 public class MainView extends VerticalLayout {
 
+    private static String VIEW_NAME = "Loan Calculator";
+
     public MainView(LoanCalculator loanCalculator, ClientRepository clientRepository) {
         LoanConditionsFormView form = new LoanConditionsFormView();
         Button button = new Button("Calculate");
         button.addClickListener(click -> {
-            Optional<RequestPayload> optionalRequestPayload = form.getRequestPayload();
+            Optional<RequestPayloadWithClient> optionalRequestPayload = form.getFormInputObject();
             if (optionalRequestPayload.isPresent()) {
                 NotificationStatus.show(
                         "Calculating request was made",
@@ -60,9 +61,7 @@ public class MainView extends VerticalLayout {
                 );
             }
         });
-
-        ClientForm clientForm = new ClientForm();
-        add(new H2("Loan Calculator"), new HorizontalLayout(clientForm, form), button);
+        add(new H2(VIEW_NAME), form, button);
     }
 
     private Grid<Payment> initPaymentPlanGrid() {

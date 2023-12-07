@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import org.example.loancalculator.model.validation.ValidLocalDate;
 
+// this payload is used in REST controller
 public class RequestPayload {
     @Positive(message = "Loan amount should be greater than 0")
     private double loanAmount;

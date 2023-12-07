@@ -15,7 +15,7 @@ public class LoanCalculator {
     private final static int DAYS_IN_MONTH = 30;
     private final static int DAYS_IN_YEAR = 360;
 
-    private final static int SCALE = 3;
+    private final static int SCALE = 2;
 
     public List<Payment> generatePaymentPlan(double loanAmount, double nominalRate, int durationInMonths, String date) {
         nominalRate = nominalRate / 100;
