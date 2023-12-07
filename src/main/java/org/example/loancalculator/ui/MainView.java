@@ -7,12 +7,11 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.router.Route;
-import org.example.loancalculator.entity.Client;
 import org.example.loancalculator.model.Payment;
-import org.example.loancalculator.model.RequestPayload;
 import org.example.loancalculator.model.RequestPayloadWithClient;
-import org.example.loancalculator.repository.ClientRepository;
+import org.example.loancalculator.service.ClientService;
 import org.example.loancalculator.service.LoanCalculator;
+import org.example.loancalculator.service.LoanService;
 import org.example.loancalculator.ui.components.LoanConditionsFormView;
 import org.example.loancalculator.ui.components.common.NotificationStatus;
 
@@ -24,7 +23,8 @@ public class MainView extends VerticalLayout {
 
     private static String VIEW_NAME = "Loan Calculator";
 
-    public MainView(LoanCalculator loanCalculator, ClientRepository clientRepository) {
+    // todo: the whole logic to save loan and client should be in a separate service and be @Transactional
+    public MainView(LoanCalculator loanCalculator, ClientService clientService, LoanService loanService) {
         LoanConditionsFormView form = new LoanConditionsFormView();
         Button button = new Button("Calculate");
         button.addClickListener(click -> {
@@ -36,12 +36,8 @@ public class MainView extends VerticalLayout {
                         Notification.Position.TOP_CENTER,
                         NotificationVariant.LUMO_PRIMARY
                 );
-                RequestPayload payload = optionalRequestPayload.get();
-                // todo: save through the service, not direct repo call
-                clientRepository.save(
-                        new Client("test@example.com")
-                );
-
+                RequestPayloadWithClient payload = optionalRequestPayload.get();
+                clientService.addClient(payload.getEmail());
                 // todo: just accept the object RequestPayload in LoanCalculator::generatePaymentPlan
                 List<Payment> payments = loanCalculator.generatePaymentPlan(
                         payload.getLoanAmount(),
@@ -49,6 +45,11 @@ public class MainView extends VerticalLayout {
                         payload.getDuration(),
                         payload.getStartDate()
                 );
+                loanService.savePayments(payments);
+
+                // should be hash of conditions, if hashes are equal, fo not calculate - return
+                int i = payments.hashCode();
+
                 Grid<Payment> grid = initPaymentPlanGrid();
                 grid.setItems(payments);
                 add(grid);

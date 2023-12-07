@@ -1,0 +1,4 @@
+CREATE TABLE loans (
+  id UUID PRIMARY KEY,
+  data BLOB NOT NULL
+);

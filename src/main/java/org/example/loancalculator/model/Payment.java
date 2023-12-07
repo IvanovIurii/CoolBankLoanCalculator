@@ -1,5 +1,6 @@
 package org.example.loancalculator.model;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 public record Payment(
@@ -9,5 +10,5 @@ public record Payment(
         BigDecimal interest,
         BigDecimal initialOutstandingPrincipal,
         BigDecimal remainingOutstandingPrincipal
-) {
+) implements Serializable {
 }
