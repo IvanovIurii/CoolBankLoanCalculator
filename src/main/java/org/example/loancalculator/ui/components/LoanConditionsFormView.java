@@ -1,11 +1,15 @@
 package org.example.loancalculator.ui.components;
 
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.converter.StringToDoubleConverter;
 import com.vaadin.flow.data.converter.StringToIntegerConverter;
+import com.vaadin.flow.shared.Registration;
 import org.example.loancalculator.model.RequestPayloadWithClient;
 import org.example.loancalculator.ui.components.common.AbstractFormView;
 import org.example.loancalculator.ui.components.common.InputField;
@@ -13,10 +17,9 @@ import org.example.loancalculator.ui.components.common.InputTextFieldBuilder;
 import org.example.loancalculator.utils.DateFormatter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class LoanConditionsFormView extends AbstractFormView<RequestPayloadWithClient> {
-    private static final String FORM_LABEL = "Conditions";
-
     private final BeanValidationBinder<RequestPayloadWithClient> binder = new BeanValidationBinder<>(RequestPayloadWithClient.class);
     private final InputTextFieldBuilder builder = InputTextFieldBuilder.getInstance();
 
@@ -44,6 +47,7 @@ public class LoanConditionsFormView extends AbstractFormView<RequestPayloadWithC
             .build();
 
     DatePicker datePicker = createDatePicker();
+    Button button = new Button("Calculate");
 
     public LoanConditionsFormView() {
         bind(loanAmountField, "loanAmount", StringToDoubleConverter::new);
@@ -51,16 +55,33 @@ public class LoanConditionsFormView extends AbstractFormView<RequestPayloadWithC
         bind(durationField, "duration", StringToIntegerConverter::new);
         bind(emailField, "email");
 
+        button.addClickListener(event -> validateAndSave());
+
         VerticalLayout verticalLayout = new VerticalLayout();
         verticalLayout.add(
-                new H2(FORM_LABEL),
                 emailField,
                 loanAmountField,
                 nominalRateField,
                 durationField,
-                datePicker
+                datePicker,
+                button
         );
         add(verticalLayout);
+    }
+
+    private void validateAndSave() {
+        RequestPayloadWithClient requestPayloadWithClient = null;
+        List<ValidationResult> validationErrors = getValidationErrors();
+        if (validationErrors.isEmpty()) {
+            requestPayloadWithClient = new RequestPayloadWithClient(
+                    Double.parseDouble(loanAmountField.getValue()),
+                    Double.parseDouble(nominalRateField.getValue()),
+                    Integer.parseInt(durationField.getValue()),
+                    DateFormatter.format(datePicker.getValue()),
+                    emailField.getValue()
+            );
+        }
+        fireEvent(new CalculateEvent(this, requestPayloadWithClient));
     }
 
     private DatePicker createDatePicker() {
@@ -73,15 +94,27 @@ public class LoanConditionsFormView extends AbstractFormView<RequestPayloadWithC
         return datePicker;
     }
 
-    @Override
-    protected RequestPayloadWithClient createFormInputObject() {
-        return new RequestPayloadWithClient(
-                Double.parseDouble(loanAmountField.getValue()),
-                Double.parseDouble(nominalRateField.getValue()),
-                Integer.parseInt(durationField.getValue()),
-                DateFormatter.format(datePicker.getValue()),
-                emailField.getValue()
-        );
+    private static abstract class LoanConditionsFormEvent extends ComponentEvent<LoanConditionsFormView> {
+        private final RequestPayloadWithClient payloadWithClient;
+
+        protected LoanConditionsFormEvent(LoanConditionsFormView source, RequestPayloadWithClient payloadWithClient) {
+            super(source, false);
+            this.payloadWithClient = payloadWithClient;
+        }
+
+        public RequestPayloadWithClient getPayloadWithClient() {
+            return payloadWithClient;
+        }
+    }
+
+    public static class CalculateEvent extends LoanConditionsFormEvent {
+        CalculateEvent(LoanConditionsFormView source, RequestPayloadWithClient contact) {
+            super(source, contact);
+        }
+    }
+
+    public Registration addCalculateListener(ComponentEventListener<CalculateEvent> listener) {
+        return addListener(CalculateEvent.class, listener);
     }
 
     @Override
